@@ -54,8 +54,8 @@ else  # 打包全部
             fi
         done
 fi
-mv dist/ sparrow${cur_date}
-tar -zcvf ./sparrow${cur_date}.tar.gz ./sparrow${cur_date}/*
-rm -r sparrow${cur_date}
-mkdir dist
-mv sparrow${cur_date}.tar.gz dist
+# mv dist/ sparrow${cur_date}
+# tar -zcvf ./sparrow${cur_date}.tar.gz ./sparrow${cur_date}/*
+# rm -r sparrow${cur_date}
+# mkdir dist
+# mv sparrow${cur_date}.tar.gz dist
