@@ -27,6 +27,18 @@ module.exports = {
   ],
   // add your custom rules here
   'rules': {
+    "key-spacing": ["error", {
+      "beforeColon": false,
+      'align': 'value'
+    }],
+    "no-multi-spaces": "error",
+    "block-spacing": ["error", "always"],
+    "computed-property-spacing": ["error", "never"],
+    "array-bracket-spacing": ["error", "always"],
+    "quotes": [
+      "error",
+      "single"
+    ],
     "indent": ["error", 2],
     "no-multiple-empty-lines": [1, {
       "max": 1
