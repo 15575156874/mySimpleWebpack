@@ -1,7 +1,4 @@
-var canvas
-var context
-var focallength = 250;
-var obj = {} //缓存点坐标
+
 class Dot {
   constructor(centerX, centerY, centerZ, radius) {
     var color = 50
@@ -58,10 +55,6 @@ class GetNextArr {
     return res
   }
 }
-var textArr = new GetNextArr([ '讯联', '年会','呼呼' ])
-var dots
-var acceleration //粒子移动加速度
-var derection //判断是否执行动画
 class Derection{
   constructor(lock= true,number=0,length=0){
     this.lock= true
@@ -83,20 +76,41 @@ class Derection{
     this.number++
   }
 }
+var canvas //canvas对象
+var context //2d上下文
+var textArr = new GetNextArr([ '讯联', '简单','高效','安全','经济' ])
+var dots //每次文字对应的坐标
+var acceleration //粒子移动加速度
+var derection //判断是否执行动画
+var focallength = 250;
+var obj = {} //缓存点坐标
+
 function init(text) {
   canvas = document.getElementById('c');
+  var width=canvas.style.width.slice(0,-2)
+  var height=canvas.style.height.slice(0,-2)
+  var max =Math.max(width,height)
+  if(max>2000){
+    alert('场景太大')
+    return
+  }
+  canvas.width= canvas.height=max
+ 
   context = canvas.getContext('2d');
   derection=new Derection()
-  acceleration = 0.05
+  acceleration = 0.1
   if (obj[text]) { //将获得的坐标缓存下来
     dots = obj[text]
+    initAnimate()
     console.log('获得缓存数组')
   } else {
-    dots = getimgData(text)
-    obj[text] = dots
-    console.log('获得新数组')
+    getimgData(text).then(e=>{
+      obj[text]=dots = e
+      console.log('获得新数组')
+      initAnimate()
+    })
   }
-  initAnimate()
+
 }
 function getimgData(text) {
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -107,25 +121,42 @@ function getimgData(text) {
     context.font = `${px}px 微软雅黑 bold`;
     context.fillStyle = 'rgba(168,168,168,1)';
     context.textAlign = 'center';
-    context.textBaseline = 'middle';
+    //context.textBaseline = 'middle';
     context.fillText(text, canvas.width / 2, canvas.height / 2);
     context.restore();
+    return new Promise(res=>{
+      res()
+    })
   }
-  drawText(text);
-  var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-  //R红,G绿,B蓝,A透明度，0-255，
-  // context.clearRect(0, 0, canvas.width, canvas.height);
-  var dots = [];
-  for (var x = 0; x < imgData.width; x += 8) {
-    for (var y = 0; y < imgData.height; y += 8) {
-      var i = (y * imgData.width + x) * 4;
-      if (imgData.data[i + 3] >= 128) { //有颜色的像素
-        var dot = new Dot(x - 3, y - 3, 0, 2);
-        dots.push(dot);
+  return drawText(text).then(e=>{
+    var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+    //R红,G绿,B蓝,A透明度，0-255，
+    // context.clearRect(0, 0, canvas.width, canvas.height);
+    var dots = [];
+    var pixel=canvas.width/50
+    function getPixel(width){
+      if(width<300){
+        return 4
+      }else if(width<500){
+        return 5
+      }else if(width<1000){
+        return 8
+      }else{
+        return 15
       }
     }
-  }
-  return dots;
+    var pixel=getPixel(canvas.width)
+    for (var x = 0; x < imgData.width; x += pixel) {
+      for (var y = 0; y < imgData.height; y += pixel) {
+        var i = (y * imgData.width + x) * 4;
+        if (imgData.data[i + 3] >= 128) { //有颜色的像素
+          var dot = new Dot(x - 3, y - 3, 0, 2);
+          dots.push(dot);
+        }
+      }
+    }
+    return dots;
+  });
 }
 // 2，绘制动画
 function initAnimate() {
@@ -154,7 +185,7 @@ function animate() {
       dot.z = dot.dz;
       derection.addNumber()
     } else {
-      dot.x = dot.x + (dot.dx - dot.x) * acceleration;
+      dot.x = dot.x + (dot.dx - dot.x) * acceleration ;
       dot.y = dot.y + (dot.dy - dot.y) * acceleration;
       dot.z = dot.z + (dot.dz - dot.z) * acceleration;
     }
