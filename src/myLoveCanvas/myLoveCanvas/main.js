@@ -1,7 +1,6 @@
 
 class Dot {
-  constructor(centerX, centerY, centerZ, radius) {
-    var color = 50
+  constructor(centerX, centerY, centerZ, radius,color=`rgba(${50*Math.random()},${50*Math.random()},${50*Math.random()},1`) {
     this.dx = centerX; //保存原来的位置
     this.dy = centerY;
     this.dz = centerZ;
@@ -13,7 +12,7 @@ class Dot {
     this.y = centerY;
     this.radius = radius; //半径
     this.scale = focallength / (focallength + this.z); //深度，缩放比例
-    this.color = `rgba(${color*Math.random()},${color*Math.random()},${color*Math.random()},${this.scale})`
+    this.color = color
   }
   paint() {
     var x = canvas.width / 2 + (this.x - canvas.width / 2) * this.scale
@@ -38,18 +37,31 @@ class GetNextArr {
   constructor(arr) {
     this.arr = arr
     this.index = 0
+    this.img=false
+    this.period=1
   }
   getBeforeKey(){
     var res=this.arr[this.index]||''
     return res
   }
+  getImg(){
+    return this.img
+  }
+  getPeriod(){
+    return this.period
+  }
   getNext() {
     var res
     if (this.arr.length > this.index) {
-      res = this.arr[this.index]
+      res = this.arr[this.index].t
+      this.img=this.arr[this.index].img 
       this.index++
+      if(this.arr.length == this.index){
+        this.period++
+      }
     } else {
-      res = this.arr[0]
+      res = this.arr[0].t
+      this.img=this.arr[0].img
       this.index = 1
     }
     return res
@@ -78,33 +90,32 @@ class Derection{
 }
 var canvas //canvas对象
 var context //2d上下文
-var textArr = new GetNextArr([ '讯联', '简单','高效','安全','经济' ])
+// var textArr = new GetNextArr([ {t:'讯联',img:false},  {t:'简单',img:false}, {t:'高效',img:false}, {t:'安全',img:false}, {t:'经济',img:false} ])
+var textArr = new GetNextArr([ {t: '讯联',img: false}, {t: '大佬',img: false} ,{t: '于方浦',img: false} ,{t: '../fangpu.jpg',img: true} ])
 var dots //每次文字对应的坐标
 var acceleration //粒子移动加速度
 var derection //判断是否执行动画
 var focallength = 250;
 var obj = {} //缓存点坐标
-
-function init(text) {
+function init(text,img=false) {
   canvas = document.getElementById('c');
   var width=canvas.style.width.slice(0,-2)
   var height=canvas.style.height.slice(0,-2)
   var max =Math.max(width,height)
+  canvas.width= canvas.height=max
+  context = canvas.getContext('2d');
+  derection=new Derection()
+  acceleration = 0.25
   if(max>2000){
     alert('场景太大')
     return
   }
-  canvas.width= canvas.height=max
- 
-  context = canvas.getContext('2d');
-  derection=new Derection()
-  acceleration = 0.1
   if (obj[text]) { //将获得的坐标缓存下来
     dots = obj[text]
     initAnimate()
     console.log('获得缓存数组')
   } else {
-    getimgData(text).then(e=>{
+    getimgData(text,img).then(e=>{
       obj[text]=dots = e
       console.log('获得新数组')
       initAnimate()
@@ -112,12 +123,11 @@ function init(text) {
   }
 
 }
-function getimgData(text) {
+function getimgData(text,img=false) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   var length=text.length
   var px = canvas.width/length
   function drawText(text) {
-    context.save()
     context.font = `${px}px 微软雅黑 bold`;
     context.fillStyle = 'rgba(168,168,168,1)';
     context.textAlign = 'center';
@@ -128,9 +138,8 @@ function getimgData(text) {
       res()
     })
   }
-  return drawText(text).then(e=>{
+  function getPosition(img=false){
     var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-    //R红,G绿,B蓝,A透明度，0-255，
     // context.clearRect(0, 0, canvas.width, canvas.height);
     var dots = [];
     var pixel=canvas.width/50
@@ -140,25 +149,50 @@ function getimgData(text) {
       }else if(width<500){
         return 5
       }else if(width<1000){
-        return 8
+        return 3
       }else{
         return 15
       }
     }
-    var pixel=getPixel(canvas.width)
+    
+    var pixel=img?4:getPixel(canvas.width)
     for (var x = 0; x < imgData.width; x += pixel) {
       for (var y = 0; y < imgData.height; y += pixel) {
-        var i = (y * imgData.width + x) * 4;
-        if (imgData.data[i + 3] >= 128) { //有颜色的像素
-          var dot = new Dot(x - 3, y - 3, 0, 2);
+        var i = (y * imgData.width + x) * 4; //R红,G绿,B蓝,A透明度，0-255，
+        var r=imgData.data[i]
+        var g=imgData.data[i+1]
+        var b=imgData.data[i+2]
+        var a=imgData.data[i+3]
+        
+        if (imgData.data[i + 3] >= 20) { //有颜色的像素
+          var dot = new Dot(x, y, 0, pixel/2.5,`rgba(${r},${g},${b},${a}`);
           dots.push(dot);
         }
       }
     }
     return dots;
-  });
+  }
+  if(!img){
+    return drawText(text,img=false).then(e=>{
+      return getPosition()
+    })
+  } else{
+    var eleImg= document.createElement('img')
+    eleImg.src=text
+    return new Promise(res=>{
+      eleImg.onload=function(){
+        context.save()
+        var x=canvas.width / 4
+        var y=canvas.height / 4
+        var imgW=canvas.width / 2
+        var imgH=canvas.height / 2
+        context.drawImage(eleImg,x,y,imgW,imgH)
+        context.restore(); 
+        res(getPosition(true))
+      }
+    })
+  }
 }
-// 2，绘制动画
 function initAnimate() {
   var beforeDots=obj[textArr.getBeforeKey()]
   dots.forEach((dot,index) => {
@@ -169,24 +203,26 @@ function initAnimate() {
       dot.y = Math.random() * canvas.height;
       dot.z = Math.random() * focallength * 2 - focallength;
     }
+    // dot.x = 0;
+    // dot.y = 0;
+    // dot.z = Math.random() * focallength * 2 - focallength;
     dot.paint(context, canvas);
   });
   animate();
 }
-
 function animate() {
   context.clearRect(0, 0, canvas.width, canvas.height);
   derection.setLength(dots.length)
   dots.forEach(e => {
     var dot = e;
-    if (Math.abs(dot.dx - dot.x) < 0.01 && Math.abs(dot.dy - dot.y) < 0.01 && Math.abs(dot.dz - dot.z) < 0.01) {
+    if (Math.abs(dot.dx - dot.x) < 0.5 && Math.abs(dot.dy - dot.y) < 0.5 && Math.abs(dot.dz - dot.z) < 0.5) {
       dot.x = dot.dx;
       dot.y = dot.dy;
       dot.z = dot.dz;
       derection.addNumber()
     } else {
-      dot.x = dot.x + (dot.dx - dot.x) * acceleration ;
-      dot.y = dot.y + (dot.dy - dot.y) * acceleration;
+      dot.x = dot.x + (dot.dx - dot.x) * acceleration*1.1;
+      dot.y = dot.y + (dot.dy - dot.y) * acceleration*0.5;
       dot.z = dot.z + (dot.dz - dot.z) * acceleration;
     }
     dot.paint(context, canvas);
@@ -202,9 +238,15 @@ function animate() {
       mozRequestAnimationFrame(animate);
     }
   } else {
+    if(textArr.getPeriod()==1){
+      // setTimeout(e => {
+      //   init(textArr.getNext(),textArr.getImg())
+      // }, 500)
+    }
     setTimeout(e => {
-      init(textArr.getNext())
-    }, 1000)
+      init(textArr.getNext(),textArr.getImg())
+    }, 500)
+   
   }
 }
-init(textArr.getNext())
+init(textArr.getNext(),textArr.getImg())
