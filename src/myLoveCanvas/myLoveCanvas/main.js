@@ -14,15 +14,21 @@ class Dot {
     this.scale = focallength / (focallength + this.z); //深度，缩放比例
     this.color = color
   }
-  paint() {
+  paint(isImg) {
     var x = canvas.width / 2 + (this.x - canvas.width / 2) * this.scale
     var y = canvas.height / 2 + (this.y - canvas.height / 2) * this.scale
     context.save();
     context.beginPath();
+    // if(isImg){
+    //   var a =this.radius * this.scale
+    //   context.fillRect(x,y,a,a);
+    // }else{
     context.arc(
       x,
       y,
       this.radius * this.scale, 0, 2 * Math.PI);
+    // }
+    
     context.fillStyle = this.color
     context.fill()
     context.restore();
@@ -90,14 +96,17 @@ class Derection{
 }
 var canvas //canvas对象
 var context //2d上下文
-// var textArr = new GetNextArr([ {t:'讯联',img:false},  {t:'简单',img:false}, {t:'高效',img:false}, {t:'安全',img:false}, {t:'经济',img:false} ])
-var textArr = new GetNextArr([ {t: '讯联',img: false}, {t: '大佬',img: false} ,{t: '于方浦',img: false} ,{t: '../fangpu.jpg',img: true} ])
+var textArr = new GetNextArr([ {t: '讯联',img: false}, {t: '../other1.jpeg',img: true}, {t: '../other2.jpeg',img: true}, {t: '../qiang1.jpeg',img: true}, {t: '../qiang2.jpeg',img: true} ])
+// var textArr = new GetNextArr([ {t: '讯联',img: false}, {t: '大佬',img: false} ,{t: '于方浦',img: false} ,{t: '../fangpu.jpg',img: true} ])
 var dots //每次文字对应的坐标
 var acceleration //粒子移动加速度
 var derection //判断是否执行动画
 var focallength = 250;
 var obj = {} //缓存点坐标
+var time=new Date().getTime()
 function init(text,img=false) {
+  console.log('开始时间',time)
+  var cTime=new Date().getTime()
   canvas = document.getElementById('c');
   var width=canvas.style.width.slice(0,-2)
   var height=canvas.style.height.slice(0,-2)
@@ -112,12 +121,10 @@ function init(text,img=false) {
   }
   if (obj[text]) { //将获得的坐标缓存下来
     dots = obj[text]
-    initAnimate()
-    console.log('获得缓存数组')
+    initAnimate(img)
   } else {
     getimgData(text,img).then(e=>{
       obj[text]=dots = e
-      console.log('获得新数组')
       initAnimate()
     })
   }
@@ -155,7 +162,7 @@ function getimgData(text,img=false) {
       }
     }
     
-    var pixel=img?4:getPixel(canvas.width)
+    var pixel=img?3:getPixel(canvas.width)
     for (var x = 0; x < imgData.width; x += pixel) {
       for (var y = 0; y < imgData.height; y += pixel) {
         var i = (y * imgData.width + x) * 4; //R红,G绿,B蓝,A透明度，0-255，
@@ -163,8 +170,12 @@ function getimgData(text,img=false) {
         var g=imgData.data[i+1]
         var b=imgData.data[i+2]
         var a=imgData.data[i+3]
-        
-        if (imgData.data[i + 3] >= 20) { //有颜色的像素
+        var grid={ //弧度系数
+          r: 0.299,
+          g: 0.587,
+          b: 0.114
+        }
+        if (imgData.data[i + 3] >= 128) { //有颜色的像素
           var dot = new Dot(x, y, 0, pixel/2.5,`rgba(${r},${g},${b},${a}`);
           dots.push(dot);
         }
@@ -182,10 +193,11 @@ function getimgData(text,img=false) {
     return new Promise(res=>{
       eleImg.onload=function(){
         context.save()
+        var imgScale=eleImg.height/eleImg.width
         var x=canvas.width / 4
         var y=canvas.height / 4
         var imgW=canvas.width / 2
-        var imgH=canvas.height / 2
+        var imgH=imgScale*imgW
         context.drawImage(eleImg,x,y,imgW,imgH)
         context.restore(); 
         res(getPosition(true))
@@ -193,7 +205,7 @@ function getimgData(text,img=false) {
     })
   }
 }
-function initAnimate() {
+function initAnimate(isImg) {
   var beforeDots=obj[textArr.getBeforeKey()]
   dots.forEach((dot,index) => {
     if(beforeDots&&beforeDots[index]){
@@ -206,11 +218,12 @@ function initAnimate() {
     // dot.x = 0;
     // dot.y = 0;
     // dot.z = Math.random() * focallength * 2 - focallength;
-    dot.paint(context, canvas);
+    dot.paint(isImg);
   });
-  animate();
+  animate(isImg);
 }
-function animate() {
+function animate(isImg) {
+  
   context.clearRect(0, 0, canvas.width, canvas.height);
   derection.setLength(dots.length)
   dots.forEach(e => {
@@ -225,7 +238,7 @@ function animate() {
       dot.y = dot.y + (dot.dy - dot.y) * acceleration*0.5;
       dot.z = dot.z + (dot.dz - dot.z) * acceleration;
     }
-    dot.paint(context, canvas);
+    dot.paint(isImg);
   });
   if (derection.checkLock()) {
     if ('requestAnimationFrame' in window) {
@@ -243,10 +256,10 @@ function animate() {
       //   init(textArr.getNext(),textArr.getImg())
       // }, 500)
     }
+    console.log('结束时间',new Date().getTime()- time)
     setTimeout(e => {
       init(textArr.getNext(),textArr.getImg())
-    }, 500)
-   
+    }, 2500)
   }
 }
 init(textArr.getNext(),textArr.getImg())
