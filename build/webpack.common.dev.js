@@ -2,17 +2,17 @@ const path = require('path');
 const webpack = require('webpack');
 const merge = require('webpack-merge');
 const common = require('./webpack.common.js');
-process.env.NODE_ENV = "development"
+process.env.NODE_ENV = 'development'
 module.exports = merge(common, {
-  mode: 'development',
+  mode:      'development',
   // devtool: 'inline-source-map',
   devServer: {
-    contentBase: path.resolve(__dirname, `../dist`),
-    hot: true,
-    proxy: {
+    contentBase: path.resolve(__dirname, '../dist'),
+    hot:         true,
+    proxy:       {
       '/app': {
-        target: 'https://test.everonet.com',
-        secure: false,
+        target:       'https://test.everonet.com',
+        secure:       false,
         changeOrigin: true,
         // pathRewrite: {
         //     '^/app': ''
@@ -28,13 +28,13 @@ module.exports = merge(common, {
     // }])
   ],
   optimization: {},
-  module: {
-    rules: [{
+  module:       {
+    rules: [ {
       test: /\.(html)$/,
-      use: {
-        loader: 'html-loader',
+      use:  {
+        loader:  'html-loader',
         options: {
-          attrs: [':data-src']
+          attrs: [ ':data-src' ]
         }
       }
     }, ]

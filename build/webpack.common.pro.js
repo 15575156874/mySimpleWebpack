@@ -4,7 +4,7 @@ var OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = merge(common, {
-  mode: 'production',
+  mode:    'production',
   plugins: [
   ],
   optimization: {
@@ -13,13 +13,13 @@ module.exports = merge(common, {
       new OptimizeCssAssetsPlugin({}),
     ],
     splitChunks: {
-      chunks: 'all',
+      chunks:      'all',
       cacheGroups: {
         libs: {
-          name: `${process.env.ENV_file}Chunk`,
+          name:     `${process.env.ENV_file}Chunk`,
           priority: 10,
           //misChunks:0,
-          test: /[\\/]dependencies[\\/]|[\\/]node_modules[\\/]///resolve(`../src/${process.env.ENV_file}/dependencies`),
+          test:     /[\\/]dependencies[\\/]|[\\/]node_modules[\\/]///resolve(`../src/${process.env.ENV_file}/dependencies`),
         }
         //   elementUI: {
         //     name: 'chunk-elementUI', // 单独将 elementUI 拆包

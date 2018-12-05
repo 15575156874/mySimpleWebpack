@@ -6,7 +6,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const util =require('./util.js')
 console.log('输出路径', path.resolve(__dirname, `../dist/${process.env.ENV_other ? `${process.env.ENV_other}/` : ''}${process.env.ENV_file}`))
 module.exports = {
-  entry: util.getEntry(process.env.ENV_other?`other/${process.env.ENV_other}`:'').obj.entry,
+  entry:   util.getEntry(process.env.ENV_other?`other/${process.env.ENV_other}`:'').obj.entry,
   plugins: [
     new VueLoaderPlugin(),
     ...util.getEntry(process.env.ENV_other?`other/${process.env.ENV_other}/`:'').htmlWebpackPluginDevConfig.plugins,
@@ -15,25 +15,25 @@ module.exports = {
     //     {
     //         allowExternal: true //允许删除根目录以外的文件夹
     //     }),
-    new CopyWebpackPlugin([{
+    new CopyWebpackPlugin([ {
       from: path.resolve(__dirname, `../src/${process.env.ENV_other ? `other/${process.env.ENV_other}/` : ''}${process.env.ENV_file}/static`)
-    }]),
+    } ]),
   ],
   module: {
-    rules: [{
-      test: /\.vue$/,
+    rules: [ {
+      test:   /\.vue$/,
       loader: 'vue-loader'
     },
     {
       test: /\.(png|svg|jpg|gif)$/,
-      use: ['file-loader']
+      use:  [ 'file-loader' ]
     },
     {
       test: /\.css$|\.styl/,
-      use: ExtractTextPlugin.extract({
-        fallback: "style-loader",
+      use:  ExtractTextPlugin.extract({
+        fallback: 'style-loader',
         // use: ["css-loader", 'postcss-loader']
-        use: [{
+        use:      [ {
           loader: 'css-loader',
         }, {
           loader: 'postcss-loader'
@@ -45,13 +45,13 @@ module.exports = {
       }),
     },
     {
-      test: /\.js$/,
+      test:    /\.js$/,
       exclude: /(node_modules|bower_components|dependencies)/,
-      use: [{
+      use:     [ {
         loader: 'babel-loader',
       },
       {
-        loader: path.resolve("./inject-loader.js") // 开发模式使用注入代码实现html热更新
+        loader: path.resolve('./inject-loader.js') // 开发模式使用注入代码实现html热更新
       }
       ]
     }
@@ -59,8 +59,8 @@ module.exports = {
     ]
   },
   output: {
-    path: path.resolve(__dirname, `../dist/${process.env.ENV_other ? `${process.env.ENV_other}/` : ''}${process.env.ENV_file}`),
-    filename: './js/[name].bundle[hash].js',
+    path:          path.resolve(__dirname, `../dist/${process.env.ENV_other ? `${process.env.ENV_other}/` : ''}${process.env.ENV_file}`),
+    filename:      './js/[name].bundle[hash].js',
     chunkFilename: './js/[name].[chunkhash:3].js'
   }
 };
